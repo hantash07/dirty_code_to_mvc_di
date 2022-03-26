@@ -12,14 +12,19 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.techyourchance.dagger2course.Constants
 import com.techyourchance.dagger2course.R
 import com.techyourchance.dagger2course.questions.Question
+import com.techyourchance.dagger2course.screens.common.BaseViewMvc
 import com.techyourchance.dagger2course.screens.questiondetails.QuestionDetailsActivity
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.ArrayList
 
 class QuestionListViewMvc(
-    private val layoutInflater: LayoutInflater,
-    private val parent: ViewGroup?
+    layoutInflater: LayoutInflater,
+    parent: ViewGroup?
+) : BaseViewMvc<QuestionListViewMvc.Listener>(
+    layoutInflater,
+    parent,
+    R.layout.layout_questions_list
 ) {
 
     interface Listener {
@@ -27,18 +32,11 @@ class QuestionListViewMvc(
         fun onQuestionClicked(clickedQuestion: Question)
     }
 
-    val rootView: View
-    val listeners = HashSet<Listener>()
-
     private val swipeRefresh: SwipeRefreshLayout
     private val recyclerView: RecyclerView
     private val questionsAdapter: QuestionsAdapter
 
-    private val context: Context get() = rootView.context
-
     init {
-        rootView = layoutInflater.inflate(R.layout.layout_questions_list, parent, false)
-
         // init pull-down-to-refresh
         swipeRefresh = findViewById(R.id.swipeRefresh)
         swipeRefresh.setOnRefreshListener {
@@ -50,24 +48,12 @@ class QuestionListViewMvc(
         // init recycler view
         recyclerView = findViewById(R.id.recycler)
         recyclerView.layoutManager = LinearLayoutManager(context)
-        questionsAdapter = QuestionsAdapter{ clickedQuestion ->
+        questionsAdapter = QuestionsAdapter { clickedQuestion ->
             for (listener in listeners) {
                 listener.onQuestionClicked(clickedQuestion)
             }
         }
         recyclerView.adapter = questionsAdapter
-    }
-
-    fun <T : View?> findViewById(@IdRes id: Int): T {
-        return rootView.findViewById<T>(id)
-    }
-
-    fun registerListener(listener: Listener) {
-        listeners.add(listener)
-    }
-
-    fun unregisterListener(listener: Listener) {
-        listeners.remove(listener)
     }
 
     fun showProgressIndication() {
